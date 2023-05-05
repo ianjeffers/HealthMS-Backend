@@ -25,7 +25,7 @@ def insert_data(collection, data):
 
 @app.route('/get_data', methods=['GET'])
 def get_data():
-    userId = int(request.args.get('userID'))
+    userId = hash(request.args.get('userID'))
     category = request.args.get('category')
     data = list(db[category].find({'userId': userId}))
     for item in data:
@@ -37,7 +37,7 @@ def get_data():
 def process_text():
     data = request.get_json()
     user_text = data['text']
-    userId = data['userID']
+    userId = hash(data['userID'])
     example_json = "{'symptom': 'cough', 'notes': 'exercise-related'}"
     example_2_json = "{'exercise': 'pushups', 'notes':'20 pushups'}"
 
@@ -52,16 +52,12 @@ def process_text():
         stop=None,
         temperature=0.5,
     )
-    # return response.choices[0].message['content']
 
     parsed_data = response.choices[0].message['content']
     parsed_data = parsed_data.replace("'", "\"")
-    print("PARSED DATA ORIG:", parsed_data)
-    # Assuming the parsed_data is in JSON format
+
     try:
         parsed_data_jsons = json.loads(parsed_data)
-
-        print("SYMPTOM AND NOTE:", parsed_data_jsons)
     except json.JSONDecodeError:
         return jsonify({'success': False, 'message': 'Failed to parse the data'})
 
@@ -69,10 +65,6 @@ def process_text():
         parsed_data_jsons = [parsed_data_jsons]
 
     for parsed_data_json in parsed_data_jsons:
-
-        print(parsed_data_json)
-
-
         for category, data_value in parsed_data_json.items():
             if category == "notes":
                 continue
